@@ -1,0 +1,50 @@
+<div class="container-fluid vh-100 d-flex flex-column">
+  <!-- Navbar -->
+  <nav class="navbar navbar-light bg-light shadow-sm px-3">
+    <a class="navbar-brand fw-bold" href="#">AI Copilot</a>
+    <button class="btn btn-outline-primary btn-sm">Settings</button>
+  </nav>
+
+  <div class="row flex-grow-1">
+    <!-- Sidebar -->
+    <!-- <div class="col-md-3 col-lg-2 bg-white border-end d-none d-md-flex flex-column p-3">
+      <h6 class="text-muted mb-3">Chat History</h6>
+      <ul class="list-group flex-grow-1 overflow-auto">
+        <li class="list-group-item small">💬 Project Plan</li>
+        <li class="list-group-item small">📊 Code Review</li>
+        <li class="list-group-item small">🧠 Brainstorm Ideas</li>
+      </ul>
+      <button class="btn btn-primary mt-3">+ New Chat</button>
+    </div> -->
+
+    <!-- Chat Area -->
+    <div class="col-md-9 col-lg-12 d-flex flex-column p-0">
+      <div id="chat-container" class="flex-grow-1 overflow-auto p-3">
+        <!-- Example messages -->
+        <div class="message user-message">
+          <div class="message-content bg-primary text-white">
+            Hi AI, can you help me design an API?
+          </div>
+        </div>
+
+        <div class="message ai-message">
+          <div class="message-content bg-light border">
+            Sure! Let's start with what kind of API you're building.
+          </div>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="chat-input bg-white border-top p-5">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Type your message..."
+          />
+          <button class="btn btn-primary">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

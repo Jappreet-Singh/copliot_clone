@@ -1,0 +1,42 @@
+/* Make chat scrollable and pretty */
+#chat-container {
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Message bubbles */
+.message {
+  display: flex;
+  width: 100%;
+}
+
+.user-message {
+  justify-content: flex-end;
+}
+
+.ai-message {
+  justify-content: flex-start;
+}
+
+.message-content {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  line-height: 1.4;
+}
+
+.user-message .message-content {
+  border-bottom-right-radius: 4px;
+}
+
+.ai-message .message-content {
+  border-bottom-left-radius: 4px;
+}
+
+/* Input bar stays at bottom */
+.chat-input {
+  position: sticky;
+  bottom: 0;
+}
