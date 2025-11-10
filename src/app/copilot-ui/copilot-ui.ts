@@ -1,17 +1,22 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-copilot-ui',
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './copilot-ui.html',
-  styleUrl: './copilot-ui.css',
+  styleUrls: ['./copilot-ui.css'],
 })
 export class CopilotUi {
+  public userMessage: string = '';
+  public copilotMessage: string = '';
 
-   sendMessage(message: string) {
-    HttpClient
-    
+  constructor(private http: HttpClient) {}
+  sendMessage() {
+    this.http.get('http://127.0.0.1:8000/').subscribe((response: any) => {
+      this.copilotMessage = response.message;
+      console.log('Response from API:', this.copilotMessage, this.userMessage);
+    });
   }
-
 }
