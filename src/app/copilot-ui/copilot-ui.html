@@ -20,20 +20,26 @@
     <!-- Chat Area -->
     <div class="col-md-9 col-lg-12 d-flex flex-column p-0">
       <div id="chat-container" class="flex-grow-1 overflow-auto p-3">
-        <!-- Example messages -->
-        <div class="message user-message">
-          <div class="message-content bg-primary text-white">
-            Hi AI, can you help me design an API?
-          </div>
-        </div>
-
+        <!-- Welcome message -->
         <div class="message ai-message">
           <div class="message-content bg-light border">
             Sure! Let's start with what kind of API you're building.
           </div>
         </div>
+
+        @for(message of conversation;track message) {
+        <div class="message user-message">
+          <div class="message-content bg-primary text-white">
+            {{ message.user }}
+          </div>
+        </div>
+        <div class="message ai-message">
+          <div class="message-content bg-light border">
+            {{ message.copilot }}
+          </div>
+        </div>
+        }
       </div>
-      
 
       <!-- Input area -->
       <div class="chat-input bg-white border-top p-5">
