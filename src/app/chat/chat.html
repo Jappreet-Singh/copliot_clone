@@ -23,22 +23,25 @@
         <!-- Welcome message -->
         <div class="message ai-message">
           <div class="message-content bg-light border">
-            Sure! Let's start with what kind of API you're building.
+            Hi there! I'm your AI Copilot. How can I assist you today?
           </div>
         </div>
 
         @for(message of conversation;track message) {
+          @if(message.role=='user') {
         <div class="message user-message">
           <div class="message-content bg-primary text-white">
-            {{ message.user }}
+            {{ message.content }}
           </div>
         </div>
+      }@else{
         <div class="message ai-message">
           <div class="message-content bg-light border">
-            {{ message.copilot }}
+            {{ message.content }}
           </div>
         </div>
-        }
+      }  
+      }
       </div>
 
       <!-- Input area -->

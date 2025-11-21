@@ -1,59 +1,126 @@
-# CopliotClone
+// ...existing code...
+# 🚀 AI Chatbot (Angular + FastAPI + Ollama)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.4.
+A local, free AI chatbot (similar to ChatGPT) using:
 
-## Development server
+- Frontend: Angular 20
+- Backend: FastAPI (Python)
+- AI Engine: Ollama (local LLM such as Llama 3)
 
-To start a local development server, run:
+Run the model on your device with no API costs and no internet required after installation.
 
-```bash
-ng serve
+## 📦 Features
+
+- Real-time AI chat (User → FastAPI → Ollama → Response)
+- Local LLM (free forever via Ollama)
+- Fast, lightweight FastAPI backend
+- Angular UI with user and AI message types
+- Fully extensible (history, streaming, auth, multiple models)
+
+## 🛠️ Tech Stack
+
+- Frontend: Angular 20
+- Backend: FastAPI (Python 3)
+- AI Engine: Ollama (e.g., Llama 3)
+- Communication: REST (HTTP POST)
+
+## 📥 Installation & Setup
+
+1. Install Ollama
+   - Download: https://ollama.com/download
+   - Pull a model (example):
+     ```bash
+     ollama pull llama3
+     ```
+   - Test:
+     ```bash
+     ollama run llama3
+     ```
+
+2. Backend (FastAPI)
+   ```bash
+   pip install fastapi uvicorn ollama
+   uvicorn copilotApi:app --reload --port 8000
+   ```
+   API available at: http://localhost:8000
+
+3. Frontend (Angular)
+   ```bash
+   npm install
+   ng serve
+   ```
+   Angular runs at: http://localhost:4200
+
+Make sure CORS allows Angular to communicate with FastAPI.
+
+## 📡 API
+
+POST /chat
+
+Request:
+```json
+{ "message": "Hello AI!" }
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+Response:
+```json
+{ "response": "Hello! How can I help you today?" }
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🧠 How It Works
 
-```bash
-ng generate --help
+1. User types a message in Angular UI.  
+2. Angular sends the message to FastAPI (HttpClient).  
+3. FastAPI forwards the message to Ollama (e.g., `ollama.chat()` in Python).  
+4. Model responds and FastAPI returns the response to Angular.  
+5. Angular displays the AI message.
+
+// ...existing code...
+## 📁 Project Structure
+
+- /src
+  - index.html
+  - main.ts
+  - styles.css
+  - /app
+    - app.config.ts
+    - app.css
+    - app.html
+    - app.routes.ts
+    - app.spec.ts
+    - app.ts
+    - /backend
+      - copilotApi.py
+    - /copilot-ui
+      - copilot-ui.css
+      - copilot-ui.html
+      - copilot-ui.spec.ts
+      - copilot-ui.ts
+- README.md
+
+## 🧪 Example Flow
+
+You: "Explain what Angular signals are."  
+Angular → FastAPI → Ollama → AI: "Signals in Angular are reactive primitives that track state…"
+
+## 🔧 Configuration
+
+Change model in backend:
+```py
+model = "llama3"
 ```
+Other examples: `phi3`, `mistral`, `llama2`, `deepseek-coder`, `qwen2`
 
-## Building
+## 🧱 Future Improvements
 
-To build the project run:
+- Streaming responses (token-by-token)
+- Save chat history in a database
+- Multiple model selection
+- User accounts & authentication
+- Improved UI (Bootstrap / Tailwind)
 
-```bash
-ng build
-```
+## 🤝 Contributing
+Pull requests welcome. Open an issue for feature requests.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## 📜 License
+This project is free to use under the MIT license.
