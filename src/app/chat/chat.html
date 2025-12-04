@@ -1,7 +1,7 @@
 <div class="container-fluid vh-100 d-flex flex-column">
   <!-- Navbar -->
   <nav class="navbar navbar-light bg-light shadow-sm px-3">
-    <a class="navbar-brand fw-bold" href="#">AI Copilot</a>
+    <a class="navbar-brand fw-bold" href="#">AI Chatbot</a>
     <button class="btn btn-outline-primary btn-sm">Settings</button>
   </nav>
 
@@ -21,11 +21,11 @@
     <div class="col-md-9 col-lg-12 d-flex flex-column p-0">
       <div id="chat-container" class="flex-grow-1 overflow-auto p-3">
         <!-- Welcome message -->
-        <div class="message ai-message">
+        <!-- <div class="message ai-message">
           <div class="message-content bg-light border">
             Hi there! I'm your AI Copilot. How can I assist you today?
           </div>
-        </div>
+        </div> -->
 
         @for(message of conversation;track message) {
           @if(message.role=='user') {

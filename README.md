@@ -1,4 +1,3 @@
-// ...existing code...
 # 🚀 AI Chatbot (Angular + FastAPI + Ollama)
 
 A local, free AI chatbot (similar to ChatGPT) using:

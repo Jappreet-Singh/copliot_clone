@@ -46,9 +46,11 @@ export class Chat {
     next: (res) => {
       // Replace the last "Typing..." placeholder
       this.conversation[this.conversation.length - 1].content = res.response;
+      console.log(res);
     },
     error: () => {
       this.conversation[this.conversation.length - 1].content = "Error: AI not responding";
+      console.log("Error: AI not responding");
     }
   });
 }
