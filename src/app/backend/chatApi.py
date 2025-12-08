@@ -1,8 +1,26 @@
-from fastapi import FastAPI, Body, Query
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import ollama
 from pydantic import BaseModel
+
+#lifespan to warm up ollama model
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Warming up Ollama model...")
+    try:
+        ollama.chat(
+            model="phi3:mini",
+            messages=[{"role": "user", "content": "warmup message"}]
+        )
+        print("Model warmed up successfully.")
+    except Exception as e:
+        print(f"Error warming up model: {e}")
+    
+    yield   # ---- FastAPI runs normally after this ----
+
+    print("Shutting down API...")
 
 app = FastAPI(
     title="AI Chatbot API",
@@ -18,25 +36,17 @@ app.add_middleware(
     allow_methods=["GET","POST"],
     allow_headers=["*"],)
 
-# ⏳ Stores the entire conversation (simple in-memory history)
-conversation_history = []
+# Stores the entire conversation (simple in-memory history)
+conversation_history = [{
+        "role": "system",
+        "content": "Respond in very short answers. Max 2 sentences."
+    },]
 
 
-# 🔹 JSON body model
+# JSON body model
 class ChatMessage(BaseModel):
     message: str
 
-@app.on_event("startup")
-def warmup_model():
-    print("Warming up Ollama model...")
-    try:
-        ollama.chat(
-            model="phi3:mini",
-            messages=[{"role": "user", "content": "Hello!"}]
-        )
-        print("Model warmed up successfully.")
-    except Exception as e:
-        print(f"Error warming up model: {e}")
 
 @app.post("/message")
 def put_message(data: ChatMessage):
@@ -55,7 +65,8 @@ def put_message(data: ChatMessage):
         stream = ollama.chat(
             model="phi3:mini",
             messages=conversation_history,
-            stream=True
+            stream=True,
+            options={"max_tokens": 100, "temperature": 0.4}
         )
 
         full_reply = ""
