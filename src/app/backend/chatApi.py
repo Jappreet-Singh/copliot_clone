@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import ollama
 from pydantic import BaseModel
 
@@ -17,13 +18,60 @@ app.add_middleware(
     allow_methods=["GET","POST"],
     allow_headers=["*"],)
 
-class ChatRequest(BaseModel):
-    messages: list  # [{role: "user", content: "..."}]
+# ⏳ Stores the entire conversation (simple in-memory history)
+conversation_history = []
 
-@app.post("/chat")
-def chat_with_ai(req: ChatRequest = Body(..., title="Ollama", description="Chat request with messages")):
-    response = ollama.chat(
-        model="llama3",
-        messages=req.messages
-    )
-    return {"response": response["message"]["content"]}
+
+# 🔹 JSON body model
+class ChatMessage(BaseModel):
+    message: str
+
+@app.on_event("startup")
+def warmup_model():
+    print("Warming up Ollama model...")
+    try:
+        ollama.chat(
+            model="phi3:mini",
+            messages=[{"role": "user", "content": "Hello!"}]
+        )
+        print("Model warmed up successfully.")
+    except Exception as e:
+        print(f"Error warming up model: {e}")
+
+@app.post("/message")
+def put_message(data: ChatMessage):
+    global conversation_history
+
+    user_message = data.message
+
+    # Add user message to history
+    conversation_history.append({
+        "role": "user",
+        "content": user_message
+    })
+
+    def generate():
+        # Ask Ollama with full conversation
+        stream = ollama.chat(
+            model="phi3:mini",
+            messages=conversation_history,
+            stream=True
+        )
+
+        full_reply = ""
+
+        # Stream chunks back to frontend
+        for chunk in stream:
+            if "message" in chunk:
+                content = chunk["message"]["content"]
+                if content:
+                    full_reply += content
+                    yield content  # streaming to frontend
+
+        # After stream ends → save assistant reply to history
+        conversation_history.append({
+            "role": "assistant",
+            "content": full_reply
+        })
+
+    return StreamingResponse(generate(), media_type="text/plain")
