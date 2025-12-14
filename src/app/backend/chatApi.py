@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+import fitz
 import ollama
 from pydantic import BaseModel
+import os
 
 #lifespan to warm up ollama model
 @asynccontextmanager
@@ -86,3 +88,62 @@ def put_message(data: ChatMessage):
         })
 
     return StreamingResponse(generate(), media_type="text/plain")
+
+#PHASE 3 PDF extraction endpoint
+
+# TO STORE FILES TEMPORARILY
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def extract_text_from_pdf(file_path: str) -> str:
+    doc = fitz.open(file_path)
+    text=""
+    for page in doc :
+        text += str(page.get_text())
+        doc.close()
+    return text
+
+def extract_text_from_txt(file_path: str) -> str:
+    with open(file_path, 'r', encoding='utf-8') as file:
+        text = file.read()
+    return text
+
+def summarize_text(text :str)->str:
+    response=ollama.chat(
+        model="phi3:mini",
+        messages=[
+            {
+                "role": "user",
+                "content": f"Summarize the following text clearly:\n\n{text[:6000]}"
+            }
+        ],
+        options={"temperature": 0.3, "max_tokens": 200}
+    )
+    return response["message"]["content"]
+
+@app.post("/uploadfile/")
+async def upload_file(file: UploadFile = File(...)):
+    file_path = os.path.join(UPLOAD_DIR, file.filename or "uploaded_file")
+
+    # Save uploaded file
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
+    # Extract text
+    if str(file.filename).lower().endswith(".pdf"):
+        extracted_text = extract_text_from_pdf(file_path)
+    elif str(file.filename).lower().endswith(".txt"):
+        extracted_text = extract_text_from_txt(file_path)
+    else:
+        return {"error": "Unsupported file type"}
+
+    if not extracted_text.strip():
+        return {"error": "No text extracted from file"}
+
+    # Summarize
+    summary = summarize_text(extracted_text)
+
+    return {
+        "filename": file.filename,
+        "summary": summary
+    }
