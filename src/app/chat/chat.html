@@ -43,6 +43,28 @@
       }  
       }
       </div>
+<!--  file upload area-->
+      <div class="bg-white border-top px-5 pt-3">
+  <div class="d-flex align-items-center gap-2">
+    <input
+      type="file"
+      accept=".pdf,.txt"
+      (change)="onFileSelected($event)"
+      class="form-control form-control-sm"
+    />
+
+    <button
+      class="btn btn-outline-primary btn-sm"
+      [disabled]="!selectedFile || uploading"
+      (click)="uploadFile()">
+      {{ uploading ? 'Summarizing...' : 'Summarize file' }}
+    </button>
+  </div>
+
+  <small class="text-muted d-block mt-1">
+    Upload PDF or TXT to get an instant summary
+  </small>
+</div>
 
       <!-- Input area -->
       <div class="chat-input bg-white border-top p-5">

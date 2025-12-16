@@ -13,9 +13,13 @@ export class Chat {
   public userMessage: string = '';
   public copilotMessage: string = '';
   public isLoading: boolean = false;
+  public selectedFile!: File | null;
+  public uploading: boolean = false;
 
   // Store the entire conversation as an array of message pairs
-  conversation: { role: string; content: string }[] = [];
+  conversation: { role: 'user'|'assistant'; content: string;
+  type?: 'chat'|'summary'
+   }[] = [];
 
   constructor(private http: HttpClient) {}
 
@@ -34,7 +38,7 @@ export class Chat {
     // Temporary loading message
     this.conversation.push({
       role: 'assistant',
-      content: '',
+      content: 'thinking...',
     });
 
     const assistantIndex = this.conversation.length - 1;
@@ -66,5 +70,43 @@ export class Chat {
       .catch(() => {
         this.conversation[assistantIndex].content = 'Error: AI not responding';
       });
+  }
+  onFileSelected(event: any) {
+    this.selectedFile = event.target.files[0] || null;
+  }
+
+  uploadFile(){
+    if (!this.selectedFile) return;
+    
+    // Temporary loading message
+    this.conversation.push({
+      role: 'assistant',
+      content: 'Summarizing file...',
+      type:'summary'
+    });
+
+    this.uploading = true;
+
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+
+    this.http.post<any>('http://127.0.0.1:8000/uploadfile', formData)
+    .subscribe({
+      next: (res) => {
+        // replacing temporary message with actual summary
+        const assistantIndex = this.conversation.length - 1;
+        this.conversation[assistantIndex].content = `📄 Summary of ${res.filename}:\n\n${res.summary}`;
+
+        this.uploading = false;
+        this.selectedFile = undefined!;
+      },
+      error: () => {
+        this.conversation.push({
+          role: 'assistant',
+          content: 'Error: Failed to summarize file'
+        });
+        this.uploading = false;
+      }
+    });
   }
 }
