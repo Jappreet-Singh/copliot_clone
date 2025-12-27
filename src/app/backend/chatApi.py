@@ -2,10 +2,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 import fitz
 import ollama
-from pydantic import BaseModel
+
 import os
+from rag.ingest import ingest_text
+from rag.query import retrieve_context
 
 #lifespan to warm up ollama model
 @asynccontextmanager
@@ -63,28 +66,47 @@ def put_message(data: ChatMessage):
     })
 
     def generate():
+        # Retrieve context from RAG system
+        context = retrieve_context(user_message)
+
+        # Construct system prompt with context
+        system_prompt = f"""
+        You are a personal AI copilot.
+        Answer using the provided context when relevant.
+
+        Context:
+        {context}
+        """
+        # Full message list with system prompt
+        messages = [
+            {"role": "system", "content": system_prompt},
+            *conversation_history
+        ]
         # Ask Ollama with full conversation
         stream = ollama.chat(
             model="phi3:mini",
-            messages=conversation_history,
+            messages=messages,
             stream=True,
             options={"max_tokens": 100, "temperature": 0.4}
         )
 
         full_reply = ""
-
+        try:
         # Stream chunks back to frontend
-        for chunk in stream:
-            if "message" in chunk:
-                content = chunk["message"]["content"]
-                if content:
-                    full_reply += content
-                    yield content  # streaming to frontend
+            for chunk in stream:
+                if "message" in chunk:
+                    content = chunk["message"]["content"]
+                    if content:
+                        full_reply += content
+                        yield content  # streaming to frontend
+        except Exception as e:
+            yield f"\n[Error during response generation: {e}]"
 
-        # After stream ends → save assistant reply to history
-        conversation_history.append({
-            "role": "assistant",
-            "content": full_reply
+        finally:
+            # After stream ends → save assistant reply to history
+            conversation_history.append({
+                "role": "assistant",
+                "content": full_reply
         })
 
     return StreamingResponse(generate(), media_type="text/plain")
@@ -139,6 +161,9 @@ async def upload_file(file: UploadFile = File(...)):
 
     if not extracted_text.strip():
         return {"error": "No text extracted from file"}
+    
+    # Ingest text into RAG system
+    ingest_text(text = extracted_text, source=str(file.filename))
 
     # Summarize
     summary = summarize_text(extracted_text)
