@@ -1,125 +1,203 @@
-# 🚀 AI Chatbot (Angular + FastAPI + Ollama)
+# 🚀 AI Chatbot with RAG (Angular + FastAPI + Ollama)
 
-A local, free AI chatbot (similar to ChatGPT) using:
+A **fully local, free AI chatbot** with **Retrieval-Augmented Generation (RAG)**, similar to ChatGPT, built using Angular, FastAPI, and Ollama.
 
-- Frontend: Angular 20
-- Backend: FastAPI (Python)
-- AI Engine: Ollama (local LLM such as Llama 3)
+Runs **entirely on your machine** — no paid APIs, no token limits, and no internet required after setup.
 
-Run the model on your device with no API costs and no internet required after installation.
+---
+
+## 🎯 Project Overview
+
+This project demonstrates a **production-style AI system** using:
+- Angular (frontend)
+- FastAPI (backend)
+- Ollama (local LLM)
+- ChromaDB (vector database for RAG)
+
+The chatbot can:
+- Answer general questions
+- Ingest documents (PDF / TXT)
+- Retrieve relevant context from documents
+- Generate grounded, context-aware responses
+
+---
 
 ## 📦 Features
 
-- Real-time AI chat (User → FastAPI → Ollama → Response)
-- Local LLM (free forever via Ollama)
-- Fast, lightweight FastAPI backend
-- Angular UI with user and AI message types
-- Fully extensible (history, streaming, auth, multiple models)
+- Real-time AI chat
+- Streaming responses (token-by-token)
+- **Retrieval-Augmented Generation (RAG)**
+- Document upload (PDF / TXT)
+- Local vector database (ChromaDB)
+- Local embeddings via Ollama
+- No API keys or usage limits
+- FastAPI backend with streaming
+- Angular chat UI
+- Modular and extensible architecture
+
+---
 
 ## 🛠️ Tech Stack
 
-- Frontend: Angular 20
-- Backend: FastAPI (Python 3)
-- AI Engine: Ollama (e.g., Llama 3)
-- Communication: REST (HTTP POST)
+### Frontend
+- Angular 20
+- TypeScript
+- HttpClient
+
+### Backend
+- FastAPI (Python 3.11)
+- Uvicorn
+
+### AI & RAG
+- Ollama (local LLM)
+- LangChain
+- ChromaDB
+- Ollama Embeddings
+
+### Supported Models
+- `llama3`
+- `phi3`
+- `mistral`
+- `qwen2`
+- `deepseek-coder`
+
+---
+
+## 🧠 How RAG Works
+
+1. User uploads a document (PDF or TXT)
+2. Backend extracts text
+3. Text is chunked and embedded
+4. Embeddings are stored in ChromaDB
+5. User asks a question
+6. Relevant chunks are retrieved via similarity search
+7. Retrieved context is injected into the system prompt
+8. Ollama generates a grounded response
+
+---
 
 ## 📥 Installation & Setup
 
-1. Install Ollama
-   - Download: https://ollama.com/download
-   - Pull a model (example):
-     ```bash
-     ollama pull llama3
-     ```
-   - Test:
-     ```bash
-     ollama run llama3
-     ```
+### 1️⃣ Install Ollama
 
-2. Backend (FastAPI)
-   ```bash
-   pip install fastapi uvicorn ollama
-   uvicorn copilotApi:app --reload --port 8000
-   ```
-   API available at: http://localhost:8000
+Download: https://ollama.com/download
 
-3. Frontend (Angular)
-   ```bash
-   npm install
-   ng serve
-   ```
-   Angular runs at: http://localhost:4200
+### 📥 Model Setup
 
-Make sure CORS allows Angular to communicate with FastAPI.
+Pull a model:
+```bash
+ollama pull llama3 
 
-## 📡 API
+test model:
+ollama run llama3
 
-POST /chat
+### Backend Setup(FastApi)
 
-Request:
-```json
-{ "message": "Hello AI!" }
-```
+- python -m venv venv venv\Scripts\activate
+- pip install fastapi uvicorn ollama \
+  langchain langchain-ollama langchain-chroma \
+  chromadb pymupdf python-multipart
 
-Response:
-```json
-{ "response": "Hello! How can I help you today?" }
-```
+test backend:
+uvicorn chatApi:app --reload
 
-## 🧠 How It Works
+### Frontend Setup(Angular)
 
-1. User types a message in Angular UI.  
-2. Angular sends the message to FastAPI (HttpClient).  
-3. FastAPI forwards the message to Ollama (e.g., `ollama.chat()` in Python).  
-4. Model responds and FastAPI returns the response to Angular.  
-5. Angular displays the AI message.
+- npm install
+- npg serve
+-should run it on http://localhost:4200 because of CORS
 
-// ...existing code...
+## 📡 API Endpoints
+
+### POST /message
+
+Streaming AI chat response.
+
+Request
+{
+  "message": "Explain the uploaded document"
+}
+
+Response
+(streamed text/plain)
+
+### POST /uploadfile
+
+Upload a document for RAG ingestion.
+
+Supported formats
+.pdf
+.txt
+
+Response
+
+{
+  "filename": "example.pdf",
+  "summary": "High-level document summary..."
+}
+
 ## 📁 Project Structure
+  /src/
+  └─ app/
+  │  │  ├─ backend/
+  │  │  │  ├─ chatApi.py
+  │  │  │  ├─ chroma_db/
+  │  │  │  ├─ uploads/
+  │  │  │  ├─ upload_file/
+  │  │  │  │ └─ upload_file.py
+  │  │  │  └─ rag/
+  │  │  │     ├─ ingest.py
+  │  │  │     ├─ query.py
+  │  │  │     └─ vectorStorage.py
+  │  │  ├─ chat/
+  │  │  │  ├─ chat.ts
+  │  │  │  ├─ chat.html
+  │  │  │  └─ chat.css
+  │  │  ├─  app.config.ts
+  │  │  ├─ app.css
+  │  │  ├─ app.html
+  │  │  ├─ app.routes.ts
+  │  │  ├─ app.spec.ts
+  │  │  └─ app.ts
+  │  ├─ index.html
+  │  ├─ main.ts
+  │  └─ styles.css
+  ├─ .editorconfig
+  ├─ .gitignore
+  ├─ angular.json
+  ├─ package.json
+  ├─ package-lock.json
+  ├─ README.md
+  ├─ tsconfig.app.json
+  ├─ tsconfig.json
+  └─ tsconfig.spec.json
+      
+      
+## 🧪 Example Usage
 
-- /src
-  - index.html
-  - main.ts
-  - styles.css
-  - /app
-    - app.config.ts
-    - app.css
-    - app.html
-    - app.routes.ts
-    - app.spec.ts
-    - app.ts
-    - /backend
-      - copilotApi.py
-    - /copilot-ui
-      - copilot-ui.css
-      - copilot-ui.html
-      - copilot-ui.spec.ts
-      - copilot-ui.ts
-- README.md
+Upload a document:
+company_policy.pdf
 
-## 🧪 Example Flow
+Ask:
+“What does the document say about vacation policy?”
 
-You: "Explain what Angular signals are."  
-Angular → FastAPI → Ollama → AI: "Signals in Angular are reactive primitives that track state…"
+The AI responds using retrieved document context.
 
 ## 🔧 Configuration
 
-Change model in backend:
-```py
+Change the model in the backend:
 model = "llama3"
-```
-Other examples: `phi3`, `mistral`, `llama2`, `deepseek-coder`, `qwen2`
 
-## 🧱 Future Improvements
+Other supported models:
+phi3
+mistral
+qwen2
+deepseek-coder
 
-- Streaming responses (token-by-token)
-- Save chat history in a database
-- Multiple model selection
-- User accounts & authentication
-- Improved UI (Bootstrap / Tailwind)
+## 🧱 Completed Phases
 
-## 🤝 Contributing
-Pull requests welcome. Open an issue for feature requests.
+Phase 1: Angular UI & FastAPI setup
 
-## 📜 License
-This project is free to use under the MIT license.
+Phase 2: Local LLM integration with Ollama
+
+Phase 3: RAG system with document ingestion and vector search 
