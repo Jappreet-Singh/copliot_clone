@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import fitz
 import ollama
+from upload_file.upload_file import extract_text_from_pdf, extract_text_from_txt
 
 import os
 from rag.ingest import ingest_text
@@ -125,19 +126,6 @@ def put_message(data: ChatMessage):
 # TO STORE FILES TEMPORARILY
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-def extract_text_from_pdf(file_path: str) -> str:
-    doc = fitz.open(file_path)
-    text=""
-    for page in doc :
-        text += str(page.get_text())
-        doc.close()
-    return text
-
-def extract_text_from_txt(file_path: str) -> str:
-    with open(file_path, 'r', encoding='utf-8') as file:
-        text = file.read()
-    return text
 
 def summarize_text(text :str)->str:
     response=ollama.chat(
