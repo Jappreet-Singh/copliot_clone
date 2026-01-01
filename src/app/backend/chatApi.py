@@ -19,7 +19,11 @@ async def lifespan(app: FastAPI):
             model="phi3:mini",
             messages=[{"role": "user", "content": "warmup message"}]
         )
-        print("Model warmed up successfully.")
+        ollama.embed(
+            model="nomic-embed-text",
+            input="warmup embedding"
+        )
+        print("Model + embedding warmed up successfully.")
     except Exception as e:
         print(f"Error warming up model: {e}")
     
@@ -38,7 +42,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200"],
     allow_credentials=True,
-    allow_methods=["GET","POST"],
+    allow_methods=["*"],
     allow_headers=["*"],)
 
 # Stores the entire conversation (simple in-memory history)
@@ -64,10 +68,15 @@ def put_message(data: ChatMessage):
         "role": "user",
         "content": user_message
     })
+    # RAG WORK BEFORE STREAMING
+    try:
+        context = retrieve_context(user_message)
+    except Exception as e:
+        # Fail safely BEFORE headers are sent
+        return {"error": f"RAG retrieval failed: {e}"}
+
 
     def generate():
-        # Retrieve context from RAG system
-        context = retrieve_context(user_message)
 
         # Construct system prompt with context
         system_prompt = f"""
@@ -143,7 +152,7 @@ def summarize_text(text :str)->str:
     )
     return response["message"]["content"]
 
-@app.post("/uploadfile/")
+@app.post("/uploadfile")
 async def upload_file(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename or "uploaded_file")
 

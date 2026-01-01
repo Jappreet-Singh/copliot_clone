@@ -1,0 +1,11 @@
+Technology stack used in Project Atlas:
+- Backend: FastAPI (Python)
+- Frontend: Angular
+- Vector database: ChromaDB
+- Embeddings: Ollama using the model "nomic-embed-text"
+- LLM: Phi-3 Mini running locally via Ollama
+
+Important operational constraints:
+- Project Atlas must run fully offline.
+- No external API calls are permitted in production.
+- All sensitive documents must remain on the local mac

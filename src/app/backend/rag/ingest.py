@@ -1,5 +1,6 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from .vectorStorage import vector_db
+from langchain_core.documents import Document
 
 # modified phase 3 upload ingestion code
 # Ingests text into the vector database
@@ -11,9 +12,9 @@ def ingest_text(text: str, source: str):
 
     chunks = splitter.split_text(text)
 
-    vector_db.add_texts(
-        texts=chunks,
-        metadatas=[{"source": source} for _ in chunks]
-    )
+    docs = [
+        Document(page_content=chunk, metadata={"source": source})
+        for chunk in chunks
+    ]
 
-    vector_db.persist()
+    vector_db.add_documents(docs)

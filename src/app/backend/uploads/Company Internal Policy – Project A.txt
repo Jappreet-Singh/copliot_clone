@@ -1,0 +1,28 @@
+Company Internal Policy – Project Atlas
+
+Project Atlas is an internal software initiative launched in March 2023.
+The project focuses on building a local AI assistant for internal developer productivity.
+
+Key objectives of Project Atlas:
+1. Reduce cloud API dependency by using local LLMs.
+2. Improve response latency by at least 40%.
+3. Support document-based question answering using Retrieval-Augmented Generation (RAG).
+
+Technology stack used in Project Atlas:
+- Backend: FastAPI (Python)
+- Frontend: Angular
+- Vector database: ChromaDB
+- Embeddings: Ollama using the model "nomic-embed-text"
+- LLM: Phi-3 Mini running locally via Ollama
+
+Important operational constraints:
+- Project Atlas must run fully offline.
+- No external API calls are permitted in production.
+- All sensitive documents must remain on the local machine.
+
+Security note:
+Only authorized developers may upload documents into the RAG system.
+This policy was last updated on October 15, 2024.
+
+Known limitation:
+Project Atlas does NOT support image-based documents.
