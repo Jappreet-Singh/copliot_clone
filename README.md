@@ -78,65 +78,77 @@ The chatbot can:
 
 ## 📥 Installation & Setup
 
-### 1️⃣ Install Ollama
+### 1️. Install Ollama
 
 Download: https://ollama.com/download
 
-### 📥 Model Setup
+### 2. 📥 Model Setup
 
 Pull a model:
 ```bash
 ollama pull llama3 
+```
 
 test model:
+```bash
 ollama run llama3
+```
 
-### Backend Setup(FastApi)
-
+### a. Backend Setup(FastApi)
+```bash
 - python -m venv venv venv\Scripts\activate
 - pip install fastapi uvicorn ollama \
   langchain langchain-ollama langchain-chroma \
   chromadb pymupdf python-multipart
-
+```
 test backend:
+
+```bash
 uvicorn chatApi:app --reload
+```
 
-### Frontend Setup(Angular)
+### b. Frontend Setup(Angular)
 
+```bash
 - npm install
 - npg serve
--should run it on http://localhost:4200 because of CORS
+```
+should run it on http://localhost:4200 because of CORS
 
-## 📡 API Endpoints
+## 3. 📡 API Endpoints
 
-### POST /message
+### a. POST /message
 
 Streaming AI chat response.
 
+```bash
 Request
 {
   "message": "Explain the uploaded document"
 }
-
+```
+```bash
 Response
 (streamed text/plain)
-
-### POST /uploadfile
+```
+### b. POST /uploadfile
 
 Upload a document for RAG ingestion.
 
 Supported formats
 .pdf
 .txt
-
+```bash
 Response
 
 {
   "filename": "example.pdf",
   "summary": "High-level document summary..."
 }
+```
 
-## 📁 Project Structure
+## 4. 📁 Project Structure
+```bash
   /src/
   └─ app/
   │  │  ├─ backend/
@@ -171,9 +183,9 @@ Response
   ├─ tsconfig.app.json
   ├─ tsconfig.json
   └─ tsconfig.spec.json
+  ```
       
-      
-## 🧪 Example Usage
+## 5. 🧪 Example Usage
 
 Upload a document:
 company_policy.pdf
@@ -183,7 +195,7 @@ Ask:
 
 The AI responds using retrieved document context.
 
-## 🔧 Configuration
+## 6. 🔧 Configuration
 
 Change the model in the backend:
 model = "llama3"
@@ -194,7 +206,7 @@ mistral
 qwen2
 deepseek-coder
 
-## 🧱 Completed Phases
+## 7. 🧱 Completed Phases
 
 Phase 1: Angular UI & FastAPI setup
 
