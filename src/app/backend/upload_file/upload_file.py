@@ -6,7 +6,7 @@ def extract_text_from_pdf(file_path: str) -> str:
     text=""
     for page in doc :
         text += str(page.get_text())
-        doc.close()
+    doc.close()
     return text
 
 def extract_text_from_txt(file_path: str) -> str:
