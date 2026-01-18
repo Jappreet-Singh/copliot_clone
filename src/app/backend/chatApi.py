@@ -6,10 +6,11 @@ from pydantic import BaseModel
 import fitz
 import ollama
 from upload_file.upload_file import extract_text_from_pdf, extract_text_from_txt
-
+import time
 import os
 from rag.ingest import ingest_text
 from rag.query import retrieve_context
+
 
 #lifespan to warm up ollama model
 @asynccontextmanager
@@ -61,7 +62,7 @@ class ChatMessage(BaseModel):
 @app.post("/message")
 def put_message(data: ChatMessage):
     global conversation_history
-
+    t0 = time.time()
     user_message = data.message
 
     # Add user message to history
@@ -72,6 +73,7 @@ def put_message(data: ChatMessage):
     # RAG WORK BEFORE STREAMING
     try:
         context = retrieve_context(user_message)
+        print("RAG time:", time.time()-t0)
     except Exception as e:
         # Fail safely BEFORE headers are sent
         return {"error": f"RAG retrieval failed: {e}"}
@@ -93,13 +95,14 @@ def put_message(data: ChatMessage):
             *conversation_history
         ]
         # Ask Ollama with full conversation
+        t1 = time.time()
         stream = ollama.chat(
             model="phi3:mini",
             messages=messages,
             stream=True,
             options={"max_tokens": 100, "temperature": 0.4}
         )
-
+        print("Ollama start delay:", time.time()-t1)
         full_reply = ""
         try:
         # Stream chunks back to frontend
