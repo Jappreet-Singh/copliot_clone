@@ -1,41 +1,24 @@
-from contextlib import asynccontextmanager
+import os
+import time
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-import fitz
-import ollama
+
 from upload_file.upload_file import extract_text_from_pdf, extract_text_from_txt
-import time
-import os
 from rag.ingest import ingest_text
 from rag.query import retrieve_context
 
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from dotenv import load_dotenv
 
-#lifespan to warm up ollama model
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Warming up Ollama model...")
-    try:
-        ollama.chat(
-            model="phi3:mini",
-            messages=[{"role": "user", "content": "warmup message"}]
-        )
-        ollama.embed(
-            model="nomic-embed-text",
-            input="warmup embedding"
-        )
-        print("Model + embedding warmed up successfully.")
-    except Exception as e:
-        print(f"Error warming up model: {e}")
-    
-    yield   # ---- FastAPI runs normally after this ----
+load_dotenv()
 
-    print("Shutting down API...")
-
+# We no longer need the lifespan warmup for Ollama since Gemini is a cloud API.
 app = FastAPI(
     title="AI Chatbot API",
-    description="Local AI chatbot backend using FastAPI and Ollama",
+    description="Local AI chatbot backend using FastAPI and Gemini",
     version="1.0.0"
 )
 
@@ -45,19 +28,24 @@ app.add_middleware(
     allow_origins=["http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],)
+    allow_headers=["*"],
+)
 
 # Stores the entire conversation (simple in-memory history)
 conversation_history = [{
-        "role": "system",
-        "content": "Respond in very short answers. Max 2 sentences."
-    },]
+    "role": "system",
+    "content": "Respond in very short answers. Max 2 sentences."
+}]
 
+# Initialize Gemini LLM
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    temperature=0.4,
+    max_tokens=100
+)
 
-# JSON body model
 class ChatMessage(BaseModel):
     message: str
-
 
 @app.post("/message")
 def put_message(data: ChatMessage):
@@ -70,6 +58,7 @@ def put_message(data: ChatMessage):
         "role": "user",
         "content": user_message
     })
+    
     # RAG WORK BEFORE STREAMING
     try:
         context = retrieve_context(user_message)
@@ -78,10 +67,7 @@ def put_message(data: ChatMessage):
         # Fail safely BEFORE headers are sent
         return {"error": f"RAG retrieval failed: {e}"}
 
-
     def generate():
-
-        # Construct system prompt with context
         system_prompt = f"""
         You are a personal AI copilot.
         Answer using the provided context when relevant.
@@ -89,29 +75,25 @@ def put_message(data: ChatMessage):
         Context:
         {context}
         """
-        # Full message list with system prompt
-        messages = [
-            {"role": "system", "content": system_prompt},
-            *conversation_history
-        ]
-        # Ask Ollama with full conversation
+        
+        # Build Langchain message format
+        messages = [SystemMessage(content=system_prompt)]
+        for msg in conversation_history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+
         t1 = time.time()
-        stream = ollama.chat(
-            model="phi3:mini",
-            messages=messages,
-            stream=True,
-            options={"max_tokens": 100, "temperature": 0.4}
-        )
-        print("Ollama start delay:", time.time()-t1)
+        print("Gemini start delay:", time.time()-t1)
+        
         full_reply = ""
         try:
-        # Stream chunks back to frontend
-            for chunk in stream:
-                if "message" in chunk:
-                    content = chunk["message"]["content"]
-                    if content:
-                        full_reply += content
-                        yield content  # streaming to frontend
+            # Stream chunks back to frontend using LangChain Gemini interface
+            for chunk in llm.stream(messages):
+                if chunk.content:
+                    full_reply += chunk.content
+                    yield chunk.content
         except Exception as e:
             yield f"\n[Error during response generation: {e}]"
 
@@ -120,55 +102,57 @@ def put_message(data: ChatMessage):
             conversation_history.append({
                 "role": "assistant",
                 "content": full_reply
-        })
+            })
 
     return StreamingResponse(generate(), media_type="text/plain")
 
-#PHASE 3 PDF extraction endpoint
+
+# PHASE 3 PDF extraction endpoint
 
 # TO STORE FILES TEMPORARILY
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-def summarize_text(text :str)->str:
-    response=ollama.chat(
-        model="phi3:mini",
-        messages=[
-            {
-                "role": "user",
-                "content": f"Summarize the following text clearly:\n\n{text[:6000]}"
-            }
-        ],
-        options={"temperature": 0.3, "max_tokens": 200}
-    )
-    return response["message"]["content"]
+def summarize_text(text: str) -> str:
+    prompt = f"Summarize the following text clearly:\n\n{text[:6000]}"
+    try:
+        response = llm.invoke(prompt)
+        return response.content
+    except Exception as e:
+        return f"Error summarizing text: {e}"
 
 @app.post("/uploadfile")
 async def upload_file(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename or "uploaded_file")
 
-    # Save uploaded file
+    # Save uploaded file temporarily
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    # Extract text
-    if str(file.filename).lower().endswith(".pdf"):
-        extracted_text = extract_text_from_pdf(file_path)
-    elif str(file.filename).lower().endswith(".txt"):
-        extracted_text = extract_text_from_txt(file_path)
-    else:
-        return {"error": "Unsupported file type"}
+    try:
+        # Extract text
+        filename_lower = str(file.filename).lower()
+        if filename_lower.endswith(".pdf"):
+            extracted_text = extract_text_from_pdf(file_path)
+        elif filename_lower.endswith(".txt"):
+            extracted_text = extract_text_from_txt(file_path)
+        else:
+            return {"error": "Unsupported file type"}
 
-    if not extracted_text.strip():
-        return {"error": "No text extracted from file"}
-    
-    # Ingest text into RAG system
-    ingest_text(text = extracted_text, source=str(file.filename))
+        if not extracted_text.strip():
+            return {"error": "No text extracted from file"}
+        
+        # Ingest text into RAG system (Vector DB)
+        ingest_text(text=extracted_text, source=str(file.filename))
 
-    # Summarize
-    summary = summarize_text(extracted_text)
+        # Summarize
+        summary = summarize_text(extracted_text)
 
-    return {
-        "filename": file.filename,
-        "summary": summary
-    }
+        return {
+            "filename": file.filename,
+            "summary": summary
+        }
+    finally:
+        # CLEANUP: Delete the file after it's processed so we don't use disk space
+        if os.path.exists(file_path):
+            os.remove(file_path)
