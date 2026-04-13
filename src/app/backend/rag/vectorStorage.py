@@ -15,7 +15,7 @@ if supabase_url and supabase_key:
     supabase: Client = create_client(supabase_url, supabase_key)
     
     # Gemini embeddings require GOOGLE_API_KEY to be set in environment
-    embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embedding = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     
     vector_db = SupabaseVectorStore(
         client=supabase,
