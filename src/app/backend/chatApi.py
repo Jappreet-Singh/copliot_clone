@@ -25,7 +25,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=["https://project-djxlw.vercel.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -155,4 +155,4 @@ async def upload_file(file: UploadFile = File(...)):
     finally:
         # CLEANUP: Delete the file after it's processed so we don't use disk space
         if os.path.exists(file_path):
-            os.remove(file_path)
+            os.remove(file_path)
