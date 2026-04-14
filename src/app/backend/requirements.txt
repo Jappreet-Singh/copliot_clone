@@ -3,11 +3,11 @@ uvicorn
 pydantic
 python-dotenv
 langchain
-langchain-community
+langchain-community==0.4.1
 langchain-google-genai
 langchain-text-splitters
 python-multipart
-supabase<2.23.0
+supabase
 PyMuPDF
 python-docx
 
