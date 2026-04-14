@@ -7,7 +7,7 @@ langchain-community
 langchain-google-genai
 langchain-text-splitters
 python-multipart
-supabase
+supabase<2.23.0
 PyMuPDF
 python-docx
 
