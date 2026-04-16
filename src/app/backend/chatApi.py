@@ -39,7 +39,8 @@ conversation_history = [{
 
 # Initialize Gemini LLM
 llm = ChatGoogleGenerativeAI(
-    model="gemini-pro",
+    model="gemini-1.5-flash",
+    transport="rest",
     temperature=0.4,
     max_tokens=100
 )
