@@ -39,7 +39,7 @@ conversation_history = [{
 
 # Initialize Gemini LLM
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
+    model="gemini-1.5-flash-latest",
     temperature=0.4,
     max_tokens=100
 )
