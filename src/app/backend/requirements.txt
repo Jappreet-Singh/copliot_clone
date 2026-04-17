@@ -5,6 +5,7 @@ python-dotenv
 langchain
 langchain-community==0.4.1
 langchain-google-genai
+langchain-groq
 langchain-text-splitters
 python-multipart
 supabase

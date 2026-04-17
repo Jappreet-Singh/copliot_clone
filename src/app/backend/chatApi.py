@@ -9,7 +9,7 @@ from upload_file.upload_file import extract_text_from_pdf, extract_text_from_txt
 from rag.ingest import ingest_text
 from rag.query import retrieve_context
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from dotenv import load_dotenv
 
@@ -37,10 +37,9 @@ conversation_history = [{
     "content": "Respond in very short answers. Max 2 sentences."
 }]
 
-# Initialize Gemini LLM
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
-    transport="rest",
+# Initialize Groq LLM (Llama 3 8B)
+llm = ChatGroq(
+    model="llama3-8b-8192",
     temperature=0.4,
     max_tokens=100
 )
