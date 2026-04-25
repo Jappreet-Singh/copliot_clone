@@ -152,6 +152,10 @@ async def upload_file(file: UploadFile = File(...)):
             "filename": file.filename,
             "summary": summary
         }
+    except Exception as e:
+        # Catch any unexpected errors (like Supabase still being down or file read errors)
+        # and return them as a JSON response to prevent breaking CORS headers
+        return {"error": f"An error occurred during file upload processing: {str(e)}"}
     finally:
         # CLEANUP: Delete the file after it's processed so we don't use disk space
         if os.path.exists(file_path):
