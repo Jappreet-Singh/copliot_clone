@@ -18,7 +18,7 @@ load_dotenv()
 # We no longer need the lifespan warmup for Ollama since Gemini is a cloud API.
 app = FastAPI(
     title="AI Chatbot API",
-    description="Local AI chatbot backend using FastAPI and Gemini",
+    description="Local AI chatbot backend using FastAPI and Groq",
     version="1.0.0"
 )
 
@@ -37,9 +37,9 @@ conversation_history = [{
     "content": "Respond in very short answers. Max 2 sentences."
 }]
 
-# Initialize Groq LLM (Llama 3 8B)
+# Initialize Groq LLM
 llm = ChatGroq(
-    model="llama3-8b-8192",
+    model="llama-3.1-8b-instant",
     temperature=0.4,
     max_tokens=100
 )
@@ -69,7 +69,7 @@ def put_message(data: ChatMessage):
 
     def generate():
         system_prompt = f"""
-        You are a personal AI copilot.
+        You are a personal AI groq.
         Answer using the provided context when relevant.
 
         Context:
@@ -85,11 +85,11 @@ def put_message(data: ChatMessage):
                 messages.append(AIMessage(content=msg["content"]))
 
         t1 = time.time()
-        print("Gemini start delay:", time.time()-t1)
+        print("Groq start delay:", time.time()-t1)
         
         full_reply = ""
         try:
-            # Stream chunks back to frontend using LangChain Gemini interface
+            # Stream chunks back to frontend using LangChain Groq interface
             for chunk in llm.stream(messages):
                 if chunk.content:
                     full_reply += chunk.content
