@@ -1,5 +1,5 @@
 import os
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.vectorstores import SupabaseVectorStore
 from supabase.client import create_client, Client
 from dotenv import load_dotenv
@@ -14,8 +14,16 @@ supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
 if supabase_url and supabase_key:
     supabase: Client = create_client(supabase_url, supabase_key)
     
-    # Gemini embeddings require GOOGLE_API_KEY to be set in environment
-    embedding = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+    # Hugging Face embeddings require HUGGINGFACEHUB_API_TOKEN to be set in environment
+    hf_api_key = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    
+    if not hf_api_key:
+        print("Warning: HUGGINGFACEHUB_API_TOKEN not set. Embeddings will fail.")
+        
+    embedding = HuggingFaceInferenceAPIEmbeddings(
+        api_key=hf_api_key, 
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
     
     # ---------------------------------------------------------
     # MONKEY PATCH: Fix for LangChain Supabase param bug

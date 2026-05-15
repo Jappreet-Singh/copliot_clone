@@ -2,17 +2,21 @@
 -- 1. Enable pgvector extension
 create extension if not exists vector;
 
+-- Drop existing resources since we are changing embedding dimensions
+drop table if exists documents cascade;
+drop function if exists match_documents;
+
 -- 2. Create the table for your documents
 create table if not exists documents (
   id uuid primary key default gen_random_uuid(),
   content text, 
   metadata jsonb, 
-  embedding vector(768) -- gemini-embedding-001 uses 768 dimensions
+  embedding vector(384) -- all-MiniLM-L6-v2 uses 384 dimensions
 );
 
 -- 3. Create the missing 'match_documents' function
 create or replace function match_documents (
-  query_embedding vector(768),
+  query_embedding vector(384),
   filter jsonb DEFAULT '{}'
 ) returns table (
   id uuid,
