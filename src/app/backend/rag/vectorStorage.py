@@ -1,8 +1,9 @@
 import os
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
+
 from langchain_community.vectorstores import SupabaseVectorStore
 from supabase.client import create_client, Client
 from dotenv import load_dotenv
+from langchain_huggingface import HuggingFaceEmbeddings
 
 import logging
 logger = logging.getLogger(__name__)
@@ -10,27 +11,21 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-vector_db = None
-embedding = None
 
 # We need the service role key to insert documents into Supabase
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
-hf_api_key = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
 
 if not supabase_url or not supabase_key:
     raise RuntimeError("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY")
 
-if not hf_api_key:
-    raise RuntimeError("Missing HUGGINGFACEHUB_API_TOKEN")
 
 supabase: Client = create_client(supabase_url, supabase_key)
 
 
-embedding = HuggingFaceEndpointEmbeddings(
-    model="sentence-transformers/all-MiniLM-L6-v2",
-    task="feature-extraction",
-    huggingfacehub_api_token=hf_api_key
+embedding = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2",
+    model_kwargs={"device": "cpu"}
 )
 
 # testing the embedding to ensure it works
@@ -82,8 +77,10 @@ def _patched_search(
     logger.info("RAG RPC data type: %s", type(res.data))
 
     if res.data:
-        logger.info("RAG RPC first row: %s", res.data[0])
-    
+        logger.info(
+            "RAG RPC first row keys: %s",
+            list(res.data[0].keys())
+        )
     
     # LOG 3: Check returned rows
     logger.info("RAG: Supabase returned %d rows", len(res.data))
@@ -102,6 +99,10 @@ def _patched_search(
         )
         for s in res.data if s.get("content")
     ]
+    
+SupabaseVectorStore.similarity_search_by_vector_with_relevance_scores = (
+    _patched_search
+)
     
 vector_db = SupabaseVectorStore(
     client=supabase,

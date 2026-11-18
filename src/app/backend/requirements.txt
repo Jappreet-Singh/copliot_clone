@@ -12,4 +12,4 @@ python-multipart
 supabase
 PyMuPDF
 python-docx
-
+sentence-transformers
