@@ -3,7 +3,7 @@ import os
 from langchain_community.vectorstores import SupabaseVectorStore
 from supabase.client import create_client, Client
 from dotenv import load_dotenv
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 import logging
 logger = logging.getLogger(__name__)
@@ -23,22 +23,30 @@ if not supabase_url or not supabase_key:
 supabase: Client = create_client(supabase_url, supabase_key)
 
 
-embedding = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-    model_kwargs={"device": "cpu"}
+google_api_key = os.environ.get("GOOGLE_API_KEY")
+
+if not google_api_key:
+    raise RuntimeError("Missing GOOGLE_API_KEY")
+
+embedding = GoogleGenerativeAIEmbeddings(
+    model="gemini-embedding-001",
+    google_api_key=google_api_key,
+    output_dimensionality=768
 )
 
 # testing the embedding to ensure it works
 try:
-    test_embedding = embedding.embed_query("Testing Hugging Face embeddings")
+    test_embedding = embedding.embed_query(
+        "Testing Gemini embeddings"
+    )
 
     logger.info(
-        "Hugging Face test successful. Dimensions: %d",
+        "Gemini embedding successful. Dimensions: %d",
         len(test_embedding)
     )
 
 except Exception:
-    logger.exception("Hugging Face embedding test failed")
+    logger.exception("Gemini embedding test failed")
     raise
 
     
@@ -107,8 +115,8 @@ SupabaseVectorStore.similarity_search_by_vector_with_relevance_scores = (
 vector_db = SupabaseVectorStore(
     client=supabase,
     embedding=embedding,
-    table_name="documents",
-    query_name="match_documents"
+    table_name="documents_gemini",
+    query_name="match_documents_gemini"
 )
 
 logger.info("RAG: Supabase vector store initialized successfully")

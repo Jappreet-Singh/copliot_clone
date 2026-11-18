@@ -11,12 +11,12 @@ create table if not exists documents (
   id uuid primary key default gen_random_uuid(),
   content text, 
   metadata jsonb, 
-  embedding vector(384) -- all-MiniLM-L6-v2 uses 384 dimensions
+  embedding vector(768) -- all-MiniLM-L6-v2 uses 384 dimensions
 );
 
 -- 3. Create the missing 'match_documents' function
 create or replace function match_documents (
-  query_embedding vector(384),
+  query_embedding vector(768),
   filter jsonb DEFAULT '{}'
 ) returns table (
   id uuid,
