@@ -3,6 +3,7 @@ import time
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from matplotlib.pylab import rint
 from pydantic import BaseModel
 
 from upload_file.upload_file import extract_text_from_pdf, extract_text_from_txt
@@ -12,6 +13,11 @@ from rag.query import retrieve_context
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from dotenv import load_dotenv
+
+import logging
+import traceback
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -62,11 +68,16 @@ def put_message(data: ChatMessage):
     # RAG WORK BEFORE STREAMING
     try:
         context = retrieve_context(user_message)
-        print("RAG time:", time.time()-t0)
-    except Exception as e:
-        # Fail safely BEFORE headers are sent
-        return {"error": f"RAG retrieval failed: {e}"}
+        print("RAG time:", time.time() - t0)
 
+    except Exception as e:
+        logger.exception("RAG retrieval failed")
+
+        return {
+            "error": f"RAG retrieval failed: {type(e).__name__}"
+        }
+        
+        
     def generate():
         system_prompt = f"""
         You are a personal AI groq.
