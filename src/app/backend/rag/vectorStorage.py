@@ -1,5 +1,5 @@
 import os
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_community.vectorstores import SupabaseVectorStore
 from supabase.client import create_client, Client
 from dotenv import load_dotenv
@@ -26,14 +26,25 @@ if not hf_api_key:
 
 supabase: Client = create_client(supabase_url, supabase_key)
 
-embedding = HuggingFaceInferenceAPIEmbeddings(
-    api_key=hf_api_key,
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-    api_url=(
-        "https://router.huggingface.co/hf-inference/models/"
-        "sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
-    )
+
+embedding = HuggingFaceEndpointEmbeddings(
+    model="sentence-transformers/all-MiniLM-L6-v2",
+    task="feature-extraction",
+    huggingfacehub_api_token=hf_api_key
 )
+
+# testing the embedding to ensure it works
+try:
+    test_embedding = embedding.embed_query("Testing Hugging Face embeddings")
+
+    logger.info(
+        "Hugging Face test successful. Dimensions: %d",
+        len(test_embedding)
+    )
+
+except Exception:
+    logger.exception("Hugging Face embedding test failed")
+    raise
 
     
     # ---------------------------------------------------------
