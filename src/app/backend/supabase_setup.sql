@@ -1,41 +1,36 @@
--- Run this in your Supabase SQL Editor
--- 1. Enable pgvector extension
-create extension if not exists vector;
+-- 1. Ensure pgvector is enabled
+CREATE EXTENSION IF NOT EXISTS vector;
 
--- Drop existing resources since we are changing embedding dimensions
-drop table if exists documents cascade;
-drop function if exists match_documents;
-
--- 2. Create the table for your documents
-create table if not exists documents (
-  id uuid primary key default gen_random_uuid(),
-  content text, 
-  metadata jsonb, 
-  embedding vector(768) -- all-MiniLM-L6-v2 uses 384 dimensions
+-- 2. Create a separate table for Gemini embeddings
+CREATE TABLE IF NOT EXISTS public.documents_gemini (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content TEXT,
+    metadata JSONB,
+    embedding VECTOR(768)
 );
 
--- 3. Create the missing 'match_documents' function
-create or replace function match_documents (
-  query_embedding vector(768),
-  filter jsonb DEFAULT '{}'
-) returns table (
-  id uuid,
-  content text,
-  metadata jsonb,
-  similarity float
+-- 3. Create the RPC function used by your Python code
+CREATE OR REPLACE FUNCTION public.match_documents_gemini(
+    query_embedding VECTOR(768),
+    filter JSONB DEFAULT '{}'::JSONB
 )
-language plpgsql
-as $$
-#variable_conflict use_column
-begin
-  return query
-  select
-    id,
-    content,
-    metadata,
-    1 - (documents.embedding <=> query_embedding) as similarity
-  from documents
-  where metadata @> filter
-  order by documents.embedding <=> query_embedding;
-end;
+RETURNS TABLE (
+    id UUID,
+    content TEXT,
+    metadata JSONB,
+    similarity FLOAT
+)
+LANGUAGE SQL
+AS $$
+    SELECT
+        d.id,
+        d.content,
+        d.metadata,
+        1 - (d.embedding <=> query_embedding) AS similarity
+    FROM public.documents_gemini AS d
+    WHERE d.metadata @> filter
+    ORDER BY d.embedding <=> query_embedding;
 $$;
+
+-- 4. Refresh Supabase's API schema cache
+NOTIFY pgrst, 'reload schema';

@@ -44,7 +44,8 @@ conversation_history = [{
 
 # Initialize Groq LLM
 llm = ChatGroq(
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-20b",
+    groq_api_key=os.environ.get("GROQ_API_KEY"),
     temperature=0.4,
     max_tokens=100
 )
