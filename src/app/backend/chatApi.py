@@ -3,7 +3,6 @@ import time
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from matplotlib.pylab import rint
 from pydantic import BaseModel
 
 from upload_file.upload_file import extract_text_from_pdf, extract_text_from_txt
