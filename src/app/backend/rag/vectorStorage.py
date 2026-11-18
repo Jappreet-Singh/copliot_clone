@@ -21,8 +21,11 @@ if supabase_url and supabase_key:
         print("Warning: HUGGINGFACEHUB_API_TOKEN not set. Embeddings will fail.")
         
     embedding = HuggingFaceInferenceAPIEmbeddings(
-        api_key=hf_api_key, 
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+        api_key=hf_api_key,
+    model_name="sentence-transformers/all-MiniLM-L6-v2",
+    api_url=(
+        "https://router.huggingface.co/hf-inference/models/"
+        "sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction")
     )
     
     # ---------------------------------------------------------
