@@ -10,32 +10,37 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
+vector_db = None
+embedding = None
+
 # We need the service role key to insert documents into Supabase
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
+hf_api_key = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
 
-if supabase_url and supabase_key:
-    supabase: Client = create_client(supabase_url, supabase_key)
-    
-    # Hugging Face embeddings require HUGGINGFACEHUB_API_TOKEN to be set in environment
-    hf_api_key = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
-    
-    if not hf_api_key:
-        print("Warning: HUGGINGFACEHUB_API_TOKEN not set. Embeddings will fail.")
-        
-    embedding = HuggingFaceInferenceAPIEmbeddings(
-        api_key=hf_api_key,
+if not supabase_url or not supabase_key:
+    raise RuntimeError("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY")
+
+if not hf_api_key:
+    raise RuntimeError("Missing HUGGINGFACEHUB_API_TOKEN")
+
+supabase: Client = create_client(supabase_url, supabase_key)
+
+embedding = HuggingFaceInferenceAPIEmbeddings(
+    api_key=hf_api_key,
     model_name="sentence-transformers/all-MiniLM-L6-v2",
     api_url=(
         "https://router.huggingface.co/hf-inference/models/"
-        "sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction")
+        "sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
     )
+)
+
     
     # ---------------------------------------------------------
     # MONKEY PATCH: Fix for LangChain Supabase param bug
     # ---------------------------------------------------------
-    from typing import List, Tuple, Dict, Any, Optional
-    from langchain_core.documents import Document
+from typing import List, Tuple, Dict, Any, Optional
+from langchain_core.documents import Document
     
     
 def _patched_search(
@@ -86,3 +91,12 @@ def _patched_search(
         )
         for s in res.data if s.get("content")
     ]
+    
+vector_db = SupabaseVectorStore(
+    client=supabase,
+    embedding=embedding,
+    table_name="documents",
+    query_name="match_documents"
+)
+
+logger.info("RAG: Supabase vector store initialized successfully")
