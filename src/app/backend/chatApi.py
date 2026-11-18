@@ -30,7 +30,8 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://project-djxlw.vercel.app", "http://localhost:4200"],
+    allow_origins=["https://project-djxlw.vercel.app", "http://localhost:4200",
+                   "https://project-copilot-clone-3mdm5ugwn-jappreet-singhs-projects.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
